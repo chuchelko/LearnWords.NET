@@ -1,0 +1,92 @@
+﻿const { error } = require("jquery");
+
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-dark">
+    <h1 class="display-5">Manage your words</h1>
+</div>
+
+<form asp-page-handler="selectLanguages" method="post">
+    <div class="input-group-text">
+        <div class="col-md-4 mb-3">
+                <label for="FirstLangSelect">Choose the first language:</label>
+                <select asp-for=FirstLang id="FirstLanguageSelect" 
+                asp-items="Html.GetEnumSelectList<LearnWords.DAL.Entities.Language>()"
+                    onchange="fetchWords()">
+                </select>
+        </div>
+        <div class="col-md-4 mb-3">
+                <label for="SecondLangSelect">Choose the second language:</label>
+                <select asp-for=SecondLang id="SecondLanguageSelect" 
+                asp-items="Html.GetEnumSelectList<LearnWords.DAL.Entities.Language>()"
+                    onchange="fetchWords()">
+                </select>
+        </div>
+    </div>
+</form>
+
+<form>
+    <div class="input-group-text">
+        <div class="col">
+            <input class="form-control" placeholder="@Model.FirstLang word" type="text" name="FirstWord"/>
+        </div>
+        <div class="col">
+            <input class="form-control" placeholder="@Model.SecondLang translation" type="text" name="SecondWord"/>
+        </div>
+        <div class="col">
+            <input type="submit" id="submitLanguages" class="btn btn-dark" value="Add"/>
+        </div>
+    </div>
+</form>
+
+<table class="table table-striped table-dark table-hover table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th scope="col">Number</th>
+            <th scope="col">@Model.FirstLang</th>
+            <th scope="col">@Model.SecondLang</th>
+        </tr>
+    </thead>
+    <tbody id="tableWithWords">
+    </tbody>
+</table>
+
+@section Scripts
+{
+    <script>
+        fetchWords();
+        function fetchWords() {
+            let firstLang = $('#FirstLanguageSelect').val();
+            let secondLang = $('#SecondLanguageSelect').val();
+            $.ajax({
+                url: "@Url.Page("/Index")?handler=FetchWords",
+                method: "GET",
+                data: { FirstLang: firstLang, SecondLang: secondLang },
+
+                success: function(response) {
+                    $('#tableWithWords').children().remove();
+                    $.each(response, function(i, item) {
+                        let result = $('<tr>').append(
+                            $('<td>').text(i),
+                            $('<td>').text(item.wordFrom),
+                            $('<td>').text(item.wordTo)
+                        );
+                        $('#tableWithWords').append(result);
+                    });
+                },
+
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(XMLHttpRequest);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                },
+                
+            });
+        }
+
+    </script>
+}
